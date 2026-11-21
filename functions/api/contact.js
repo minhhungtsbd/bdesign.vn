@@ -49,6 +49,8 @@ export async function onRequestPost(context) {
     submittedAt: formatVietnamTime(new Date()),
   };
 
+  let mailSent = false;
+
   // 1. Send email via SMTP if configured in Cloudflare Pages Environment Variables / Secrets
   if (env && env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
     const to = env.SMTP_TO || env.SMTP_USER;
@@ -73,17 +75,22 @@ export async function onRequestPost(context) {
           html: buildLeadEmailHtml(record),
         }
       );
+      mailSent = true;
+      console.log("SMTP sent successfully to:", to);
     } catch (err) {
       console.error("SMTP send failed:", err && err.message ? err.message : err);
       return Response.json(
         {
           ok: false,
+          mailSent: false,
           error:
             "Không thể gửi email lúc này. Vui lòng gọi trực tiếp Hotline 09888 25 303.",
         },
-        502
+        { status: 502 }
       );
     }
+  } else {
+    console.warn("SMTP not configured in env (missing SMTP_HOST/SMTP_USER/SMTP_PASS)");
   }
 
   // 2. Optional webhook forwarding
@@ -101,6 +108,7 @@ export async function onRequestPost(context) {
 
   return Response.json({
     ok: true,
+    mailSent,
     message:
       "Cảm ơn bạn đã liên hệ! B Design đã tiếp nhận thông tin và sẽ phản hồi trong thời gian sớm nhất.",
   });
