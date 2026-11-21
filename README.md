@@ -18,7 +18,14 @@ Website **B Design** (`bdesign.vn`) được khôi phục nguyên bản giao di�
    - **Framework preset**: `None`
    - **Build command**: *(để trống)*
    - **Build output directory**: `public`
-4. *(Tuỳ chọn)* Thêm biến môi trường `WEBHOOK_URL` trong Settings → Environment variables để tự động đẩy thông tin khách đăng ký tư vấn (`/api/contact`) về Telegram / Zalo / n8n / Slack / Google Sheets.
+4. **Cấu hình gửi email tự động qua máy chủ SMTP** (Cloudflare Dashboard → **Settings → Variables and Secrets**):
+   - `SMTP_HOST`: địa chỉ máy chủ SMTP (ví dụ `mail.yourdomain.com` hoặc `smtp.gmail.com`)
+   - `SMTP_PORT`: `465` *(SSL/TLS — khuyên dùng)* hoặc `587` *(STARTTLS)*. Lưu ý Cloudflare chặn cổng `25`.
+   - `SMTP_USER`: tài khoản email đăng nhập SMTP
+   - `SMTP_PASS`: mật khẩu hoặc App Password *(nên chọn loại **Secret** để mã hóa)*
+   - `SMTP_FROM`: *(tuỳ chọn)* người gửi hiển thị, ví dụ `B Design <noreply@bdesign.vn>`
+   - `SMTP_TO`: hộp thư nhận yêu cầu khách hàng (hỗ trợ nhiều email cách nhau bằng dấu phẩy, ví dụ `bdesignvn@gmail.com`)
+5. *(Tuỳ chọn)* Có thể thêm thêm biến `WEBHOOK_URL` nếu muốn đẩy đồng thời thông tin về Telegram / Zalo / n8n / Slack.
 
 ### Cách 2: Cloudflare Workers (CLI / Wrangler)
 ```bash

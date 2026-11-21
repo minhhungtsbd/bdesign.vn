@@ -1,3 +1,17 @@
+import { sendSmtpEmail, buildLeadEmailHtml } from "../../src/smtp.js";
+
+function formatVietnamTime(date) {
+  try {
+    return new Intl.DateTimeFormat("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      dateStyle: "short",
+      timeStyle: "medium",
+    }).format(date);
+  } catch {
+    return date.toISOString();
+  }
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
@@ -32,9 +46,47 @@ export async function onRequestPost(context) {
     service,
     message,
     page,
-    submittedAt: new Date().toISOString(),
+    submittedAt: formatVietnamTime(new Date()),
   };
 
+  // 1. Send email via SMTP if configured in Cloudflare Pages Environment Variables / Secrets
+  if (env && env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
+    const to = env.SMTP_TO || env.SMTP_USER;
+    const subject = service
+      ? `[B Design] Yêu cầu báo giá (${service}) - ${name}`
+      : `[B Design] Yêu cầu tư vấn mới từ ${name} (${phone})`;
+
+    try {
+      await sendSmtpEmail(
+        {
+          host: env.SMTP_HOST,
+          port: env.SMTP_PORT || 465,
+          secure: env.SMTP_SECURE,
+          user: env.SMTP_USER,
+          pass: env.SMTP_PASS,
+          from: env.SMTP_FROM || `B Design <${env.SMTP_USER}>`,
+        },
+        {
+          to,
+          replyTo: email,
+          subject,
+          html: buildLeadEmailHtml(record),
+        }
+      );
+    } catch (err) {
+      console.error("SMTP send failed:", err && err.message ? err.message : err);
+      return Response.json(
+        {
+          ok: false,
+          error:
+            "Không thể gửi email lúc này. Vui lòng gọi trực tiếp Hotline 09888 25 303.",
+        },
+        502
+      );
+    }
+  }
+
+  // 2. Optional webhook forwarding
   if (env && env.WEBHOOK_URL) {
     try {
       await fetch(env.WEBHOOK_URL, {

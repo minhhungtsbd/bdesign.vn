@@ -37,6 +37,25 @@ p{text-align:justify}.right-top{z-index:999}.row-img-bottom{margin-top:-190px;z-
   padding-left: 17px !important;
 }
 
+/* === Form Input / Select Fix (override Flatsome fixed height) === */
+.bd-form input,
+.bd-form textarea,
+.bd-form select {
+  height: auto !important;
+  min-height: 44px;
+  line-height: 1.45 !important;
+  padding: 10px 14px !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+}
+.bd-form select {
+  padding-right: 38px !important;
+  background-position: right 12px center !important;
+}
+.bd-form textarea {
+  min-height: 110px;
+}
+
 /* === Mobile & Tablet Responsive Optimization === */
 html, body {
   overflow-x: hidden;

@@ -1,3 +1,5 @@
+import { sendSmtpEmail, buildLeadEmailHtml } from "./smtp.js";
+
 const SEARCH_INDEX = [
   {
     type: "Dự án",
@@ -47,6 +49,18 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+function formatVietnamTime(date) {
+  try {
+    return new Intl.DateTimeFormat("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      dateStyle: "short",
+      timeStyle: "medium",
+    }).format(date);
+  } catch {
+    return date.toISOString();
+  }
+}
+
 async function handleContact(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -90,10 +104,47 @@ async function handleContact(request, env) {
     service,
     message,
     page,
-    submittedAt: new Date().toISOString(),
+    submittedAt: formatVietnamTime(new Date()),
   };
 
-  // Optional forwarding to a configured webhook (Telegram/Slack/Discord/Make/n8n)
+  // 1. Send email via SMTP if configured in Cloudflare Environment Variables / Secrets
+  if (env && env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
+    const to = env.SMTP_TO || env.SMTP_USER;
+    const subject = service
+      ? `[B Design] Yêu cầu báo giá (${service}) - ${name}`
+      : `[B Design] Yêu cầu tư vấn mới từ ${name} (${phone})`;
+
+    try {
+      await sendSmtpEmail(
+        {
+          host: env.SMTP_HOST,
+          port: env.SMTP_PORT || 465,
+          secure: env.SMTP_SECURE,
+          user: env.SMTP_USER,
+          pass: env.SMTP_PASS,
+          from: env.SMTP_FROM || `B Design <${env.SMTP_USER}>`,
+        },
+        {
+          to,
+          replyTo: email,
+          subject,
+          html: buildLeadEmailHtml(record),
+        }
+      );
+    } catch (err) {
+      console.error("SMTP send failed:", err && err.message ? err.message : err);
+      return jsonResponse(
+        {
+          ok: false,
+          error:
+            "Không thể gửi email lúc này. Vui lòng gọi trực tiếp Hotline 09888 25 303.",
+        },
+        502
+      );
+    }
+  }
+
+  // 2. Optional forwarding to a configured webhook (Telegram/Slack/Discord/Make/n8n)
   if (env && env.WEBHOOK_URL) {
     try {
       await fetch(env.WEBHOOK_URL, {
