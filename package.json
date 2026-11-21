@@ -1,0 +1,15 @@
+{
+  "name": "bdesign-vn",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Website B Design (bdesign.vn) - Khôi phục toàn bộ giao diện, cấu trúc và bài viết chạy trên Cloudflare Pages & Workers",
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:pages": "wrangler pages dev public",
+    "deploy": "wrangler deploy",
+    "deploy:pages": "wrangler pages deploy public --project-name bdesign-vn"
+  },
+  "devDependencies": {
+    "wrangler": "^3.100.0"
+  }
+}
